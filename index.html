@@ -1,0 +1,609 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b0c10">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Pattern Studio">
+<title>Panel Pattern Studio</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-180.png">
+<style>
+:root{
+  --bg:#0b0c10; --bg2:#101218; --card:#14171f; --card2:#1a1e28; --line:#252a36; --line2:#323848;
+  --tx:#eef1f7; --tx2:#a3abbd; --tx3:#6b7386;
+  --ac:#7c9cff; --ac2:#5b7cfa; --ok:#3ddc97; --warn:#ffb648; --err:#ff6b6b;
+  --r:16px; --r2:10px;
+  --mono:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+  --sans:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Pretendard","Segoe UI","Malgun Gothic",sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--tx);font-family:var(--sans);-webkit-font-smoothing:antialiased}
+body{min-height:100vh;background:
+  radial-gradient(1200px 500px at 85% -10%,rgba(124,156,255,.10),transparent 60%),
+  radial-gradient(900px 400px at -10% 10%,rgba(61,220,151,.06),transparent 60%),var(--bg)}
+button,input,select{font:inherit;color:inherit}
+.wrap{max-width:1240px;margin:0 auto;padding:20px 16px calc(40px + env(safe-area-inset-bottom))}
+
+/* header */
+header{display:flex;align-items:center;gap:14px;margin:4px 0 22px;flex-wrap:wrap}
+.logo{width:40px;height:40px;border-radius:11px;flex:none;display:grid;grid-template-columns:repeat(4,1fr);overflow:hidden;box-shadow:0 0 0 1px var(--line2),0 6px 20px rgba(0,0,0,.4)}
+.logo i:nth-child(odd){background:#fff}.logo i:nth-child(even){background:#000}
+.logo i:nth-child(5),.logo i:nth-child(7),.logo i:nth-child(13),.logo i:nth-child(15){background:#000}
+.logo i:nth-child(6),.logo i:nth-child(8),.logo i:nth-child(14),.logo i:nth-child(16){background:#fff}
+h1{font-size:20px;margin:0;letter-spacing:-.01em}
+.sub{color:var(--tx2);font-size:13px;margin-top:2px}
+.pill{margin-left:auto;display:inline-flex;align-items:center;gap:8px;padding:7px 12px;border-radius:999px;background:var(--card);border:1px solid var(--line);font-size:12px;color:var(--tx2)}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--tx3)}
+.dot.ok{background:var(--ok);box-shadow:0 0 10px var(--ok)}.dot.warn{background:var(--warn)}.dot.err{background:var(--err)}
+
+/* layout */
+.grid{display:grid;grid-template-columns:minmax(0,1fr) 400px;gap:20px;align-items:start}
+@media (max-width:900px){.grid{grid-template-columns:1fr}.side{order:-1;position:static!important}}
+.card{background:linear-gradient(180deg,var(--card),var(--bg2));border:1px solid var(--line);border-radius:var(--r);padding:18px;margin-bottom:16px}
+.card h2{font-size:13px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--tx2);margin:0 0 14px;display:flex;align-items:center;gap:8px}
+.card h2 .n{font-family:var(--mono);color:var(--ac);font-size:12px}
+.side{position:sticky;top:16px}
+
+/* pattern tiles */
+.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:10px}
+.tile{background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:8px;cursor:pointer;text-align:left;transition:.15s;display:flex;flex-direction:column;gap:7px}
+.tile:hover{border-color:var(--line2);transform:translateY(-1px)}
+.tile.on{border-color:var(--ac);box-shadow:0 0 0 1px var(--ac),0 6px 24px rgba(124,156,255,.18)}
+.tile canvas{width:100%;aspect-ratio:1/1.35;border-radius:7px;display:block;image-rendering:pixelated;box-shadow:0 0 0 1px rgba(255,255,255,.06)}
+.tile span{font-size:12px;font-weight:600}
+.tile small{display:block;color:var(--tx3);font-size:10.5px;font-weight:400}
+
+/* form */
+.opts{margin-top:16px;display:grid;gap:14px}
+.row{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px}
+label.f{display:flex;flex-direction:column;gap:6px;font-size:12px;color:var(--tx2)}
+input[type=number],input[type=text],select{background:var(--bg);border:1px solid var(--line2);border-radius:var(--r2);padding:10px 12px;font-size:15px;width:100%;outline:none;transition:border-color .15s}
+input:focus,select:focus{border-color:var(--ac)}
+input[type=number]{font-family:var(--mono)}
+.unit{position:relative}.unit input{padding-right:44px}.unit em{position:absolute;right:12px;top:50%;transform:translateY(-50%);font-style:normal;color:var(--tx3);font-size:12px;font-family:var(--mono);pointer-events:none}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{padding:6px 11px;border-radius:999px;background:var(--bg);border:1px solid var(--line2);font-size:12px;font-family:var(--mono);cursor:pointer;color:var(--tx2);transition:.12s}
+.chip:hover{color:var(--tx)}.chip.on{background:var(--ac);border-color:var(--ac);color:#0b0c10;font-weight:700}
+.seg{display:inline-flex;background:var(--bg);border:1px solid var(--line2);border-radius:var(--r2);padding:3px;gap:3px;flex-wrap:wrap}
+.seg button{border:0;background:none;padding:7px 12px;border-radius:7px;font-size:12px;color:var(--tx2);cursor:pointer}
+.seg button.on{background:var(--card2);color:var(--tx);box-shadow:0 0 0 1px var(--line2)}
+.hint{font-size:11.5px;color:var(--tx3);line-height:1.55}
+.hint b{color:var(--tx2);font-weight:600}
+
+/* color control */
+.cc{background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:12px;display:grid;gap:10px}
+.cc-top{display:flex;align-items:center;gap:10px}
+.sw{width:38px;height:38px;border-radius:9px;box-shadow:0 0 0 1px rgba(255,255,255,.15) inset;flex:none}
+.cc-top .t{font-size:12px;color:var(--tx2);flex:1}
+.cc-top .t b{display:block;color:var(--tx);font-family:var(--mono);font-size:13px;margin-top:2px}
+.presets{display:flex;gap:5px;flex-wrap:wrap}
+.presets button{width:22px;height:22px;border-radius:6px;border:1px solid rgba(255,255,255,.18);cursor:pointer;padding:0}
+.ch{display:grid;grid-template-columns:16px 1fr 64px;gap:10px;align-items:center}
+.ch i{font-style:normal;font-family:var(--mono);font-size:12px;font-weight:700}
+.ch input[type=number]{padding:6px 8px;font-size:13px;text-align:right}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:8px;border-radius:99px;outline:none;background:var(--line)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:#fff;border:2px solid var(--bg);box-shadow:0 1px 6px rgba(0,0,0,.5);cursor:pointer}
+input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:#fff;border:2px solid var(--bg)}
+
+/* toggles */
+.tg{display:flex;align-items:flex-start;gap:12px;padding:10px 0;border-top:1px solid var(--line)}
+.tg:first-of-type{border-top:0;padding-top:0}
+.tg .tx{flex:1;font-size:13.5px}.tg .tx small{display:block;color:var(--tx3);font-size:11.5px;margin-top:3px;line-height:1.5}
+.sw-t{position:relative;width:44px;height:26px;flex:none;margin-top:1px}
+.sw-t input{opacity:0;width:0;height:0;position:absolute}
+.sw-t span{position:absolute;inset:0;border-radius:99px;background:var(--line2);transition:.2s;cursor:pointer}
+.sw-t span::after{content:"";position:absolute;left:3px;top:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:.2s}
+.sw-t input:checked+span{background:var(--ok)}.sw-t input:checked+span::after{transform:translateX(18px)}
+
+/* preview */
+.stage{display:flex;justify-content:center;padding:6px 0 4px}
+.phone{position:relative;padding:9px;border-radius:44px;background:linear-gradient(145deg,#2a2e38,#0e1015);box-shadow:0 0 0 1px #3a4050,0 30px 60px rgba(0,0,0,.55);width:min(230px,58vw)}
+.phone canvas{display:block;width:100%;height:auto;border-radius:36px;background:#000}
+.island{position:absolute;top:18px;left:50%;transform:translateX(-50%);width:30%;height:16px;background:#000;border-radius:99px;opacity:.85;pointer-events:none}
+.meta{display:flex;justify-content:center;gap:6px;flex-wrap:wrap;margin:14px 0 4px}
+.tag{font-family:var(--mono);font-size:11px;padding:4px 8px;border-radius:6px;background:var(--bg);border:1px solid var(--line);color:var(--tx2)}
+.tag b{color:var(--tx)}
+.btns{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px}
+.btn{color:var(--tx);display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 14px;border-radius:12px;border:1px solid var(--line2);background:var(--card2);font-size:14px;font-weight:600;cursor:pointer;transition:.15s;text-decoration:none}
+.btn:hover{border-color:var(--tx3)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.pri{grid-column:1/-1;background:linear-gradient(180deg,#8aa7ff,var(--ac2));border-color:transparent;color:#fff;padding:15px;font-size:15px;box-shadow:0 8px 24px rgba(91,124,250,.35)}
+.btn.ok{background:var(--ok);color:#06140d;border-color:transparent}
+.btn svg{width:18px;height:18px;flex:none}
+.prog{margin-top:14px;display:none}
+.prog.show{display:block}
+.bar{height:8px;border-radius:99px;background:var(--line);overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--ac),var(--ok));transition:width .1s}
+.prog .l{display:flex;justify-content:space-between;font-size:12px;color:var(--tx2);margin-top:7px;font-family:var(--mono)}
+.result{display:none}
+.result.show{display:block}
+.result video{width:100%;max-height:300px;border-radius:12px;background:#000;display:block}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;font-size:12px;margin:12px 0 0;font-family:var(--mono)}
+.kv dt{color:var(--tx3)}.kv dd{margin:0;color:var(--tx);word-break:break-all}
+.note{font-size:12px;line-height:1.6;color:var(--tx2);background:rgba(255,182,72,.07);border:1px solid rgba(255,182,72,.25);border-radius:10px;padding:10px 12px;margin-top:12px}
+.note.err{background:rgba(255,107,107,.08);border-color:rgba(255,107,107,.3)}
+
+/* guide */
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;counter-reset:s}
+.step{background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:14px;font-size:13px;line-height:1.6;color:var(--tx2)}
+.step b{color:var(--tx);display:block;margin-bottom:4px;font-size:13.5px}
+.step::before{counter-increment:s;content:counter(s,decimal-leading-zero);font-family:var(--mono);color:var(--ac);font-size:12px;display:block;margin-bottom:6px}
+footer{text-align:center;color:var(--tx3);font-size:11.5px;margin-top:10px}
+
+/* fullscreen */
+#fs{position:fixed;inset:0;background:#000;z-index:100;display:none;touch-action:none}
+#fs.show{display:block}
+#fs canvas{width:100vw;height:100vh;object-fit:contain;display:block}
+#fs .x{position:absolute;bottom:calc(16px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);font-size:12px;color:#888;background:rgba(0,0,0,.6);padding:6px 12px;border-radius:99px;transition:opacity .6s;pointer-events:none}
+.hide{display:none!important}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="logo" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+    <div>
+      <h1>Panel Pattern Studio</h1>
+      <div class="sub">iPhone 디스플레이 테스트 패턴 · 고정 프레임레이트 MP4 생성기</div>
+    </div>
+    <div class="pill" id="support"><span class="dot"></span><span>인코더 확인 중…</span></div>
+  </header>
+
+  <div class="grid">
+    <main>
+      <section class="card">
+        <h2><span class="n">01</span>패턴</h2>
+        <div class="tiles" id="tiles"></div>
+        <div class="opts" id="opts"></div>
+      </section>
+
+      <section class="card">
+        <h2><span class="n">02</span>해상도 · 프레임</h2>
+        <div class="opts" style="margin-top:0">
+          <label class="f">기기 프리셋
+            <select id="device"></select>
+          </label>
+          <div class="row">
+            <label class="f">가로 (W)<div class="unit"><input type="number" id="w" min="16" max="4096" step="2"><em>px</em></div></label>
+            <label class="f">세로 (H)<div class="unit"><input type="number" id="h" min="16" max="4096" step="2"><em>px</em></div></label>
+          </div>
+          <div>
+            <label class="f">프레임 주파수<div class="unit"><input type="number" id="fps" min="1" max="240" step="1"><em>Hz</em></div></label>
+            <div class="chips" id="fpsChips" style="margin-top:8px"></div>
+          </div>
+          <div class="row">
+            <label class="f">길이<div class="unit"><input type="number" id="dur" min="1" max="600" step="1"><em>sec</em></div></label>
+            <label class="f">코덱
+              <select id="codec"><option value="avc">H.264 (호환성 최고)</option><option value="hevc">HEVC / H.265</option></select>
+            </label>
+            <label class="f">비트레이트<div class="unit"><input type="number" id="br" min="1" max="200" step="1"><em>Mbps</em></div></label>
+          </div>
+          <p class="hint">정적 패턴은 압축 효율이 높아 60초 영상도 수 MB 수준입니다. 수신 폰의 사진 앱에서 반복 재생이 번거롭다면 길이를 넉넉히(예: 300초) 잡는 것을 권장합니다. 세로·가로는 짝수여야 합니다.</p>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2><span class="n">03</span>오버레이 · 검증 도구</h2>
+        <div class="tg"><div class="tx">프레임 토글 마커<small>좌하단 정사각형이 매 프레임 흑/백으로 반전됩니다. 고속카메라·포토다이오드로 실제 구동 주파수와 프레임 드롭을 확인할 때 사용하세요.</small></div><label class="sw-t"><input type="checkbox" id="ovMarker"><span></span></label></div>
+        <div class="tg"><div class="tx">프레임 카운터 (8-bit 바이너리)<small>하단에 8칸 바이너리로 프레임 번호(mod 256)를 표시합니다. 촬영 영상에서 누락·중복 프레임을 판독할 수 있습니다.</small></div><label class="sw-t"><input type="checkbox" id="ovCounter"><span></span></label></div>
+        <div class="tg"><div class="tx">정보 라벨<small>패턴명 · 주파수 · 해상도를 화면 하단에 작게 표시합니다. 여러 영상을 구분할 때 유용합니다.</small></div><label class="sw-t"><input type="checkbox" id="ovLabel"><span></span></label></div>
+      </section>
+
+      <section class="card">
+        <h2><span class="n">04</span>사용 가이드</h2>
+        <div class="steps">
+          <div class="step"><b>생성</b>전송용 iPhone의 Safari에서 이 페이지를 열고 패턴과 Hz를 지정한 뒤 「동영상 생성」을 누릅니다. 모든 처리는 기기 안에서 이루어집니다.</div>
+          <div class="step"><b>AirDrop 전송</b>「공유 · AirDrop」 버튼으로 공유 시트를 열어 테스트 폰으로 바로 보냅니다. 수신 측은 사진 앱에 저장됩니다.</div>
+          <div class="step"><b>재생 환경 고정</b>테스트 폰에서 자동 밝기, True Tone, Night Shift, 저전력 모드를 끄고 측정하세요. 저전력 모드는 60Hz로 제한될 수 있습니다.</div>
+          <div class="step"><b>검증</b>프레임 마커를 켠 영상으로 고속 촬영해 실제 구동 Hz를 확인하세요. ProMotion은 콘텐츠 프레임레이트에 맞춰 주사율이 바뀝니다.</div>
+        </div>
+      </section>
+    </main>
+
+    <aside class="side">
+      <section class="card">
+        <h2><span class="n">◉</span>미리보기</h2>
+        <div class="stage"><div class="phone"><canvas id="pv"></canvas><div class="island"></div></div></div>
+        <div class="meta" id="meta"></div>
+        <div class="btns">
+          <button class="btn" id="bFs"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>전체화면</button>
+          <button class="btn" id="bPng"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg>패턴 PNG</button>
+          <button class="btn pri" id="bGen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="15" height="14" rx="2"/><path d="m17 10 5-3v10l-5-3"/></svg>동영상 생성</button>
+        </div>
+        <div class="prog" id="prog"><div class="bar"><i id="pbar"></i></div><div class="l"><span id="ptx">0%</span><span id="peta"></span></div></div>
+        <div id="warnBox"></div>
+      </section>
+
+      <section class="card result" id="result">
+        <h2><span class="n">✓</span>생성 완료</h2>
+        <video id="vid" playsinline muted loop controls></video>
+        <dl class="kv" id="kv"></dl>
+        <div class="btns">
+          <a class="btn" id="bDl" download><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0-5-5m5 5 5-5M4 21h16"/></svg>다운로드</a>
+          <button class="btn ok" id="bShare"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 15V3m0 0L7 8m5-5 5 5M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg>공유 · AirDrop</button>
+        </div>
+      </section>
+    </aside>
+  </div>
+  <footer>모든 영상은 브라우저 안에서 WebCodecs로 인코딩되며 외부 서버로 전송되지 않습니다.</footer>
+</div>
+
+<div id="fs"><canvas id="fsc"></canvas><div class="x" id="fsx">탭하여 닫기</div></div>
+
+<script src="mp4-muxer.js"></script>
+<script>
+"use strict";
+/* ---------------- data ---------------- */
+const DEVICES = [
+  {id:"18pro",   n:"iPhone 18 Pro · 6.3″",     w:1206, h:2622},
+  {id:"18promax",n:"iPhone 18 Pro Max · 6.9″", w:1320, h:2868},
+  {id:"17",      n:"iPhone 17 · 6.3″",         w:1206, h:2622},
+  {id:"air",     n:"iPhone Air · 6.5″",        w:1260, h:2736},
+  {id:"fhd",     n:"FHD 세로 1080×1920",        w:1080, h:1920},
+  {id:"custom",  n:"사용자 지정",                w:null, h:null},
+];
+const FPS_CHIPS = [1,10,24,30,48,60,90,120];
+const PRESET_COLORS = [[255,255,255],[0,0,0],[255,0,0],[0,255,0],[0,0,255],[0,255,255],[255,0,255],[255,255,0],[128,128,128],[64,64,64],[32,32,32]];
+
+const PATTERNS = {
+  solid:  {n:"단색",       d:"R/G/B 레벨 지정", colors:["A"]},
+  checker:{n:"체커보드",    d:"N×N / px 지정",   colors:["A","B"]},
+  ramp:   {n:"그라데이션",  d:"계조 스텝",        colors:[]},
+  bars:   {n:"컬러바",      d:"8색 SMPTE형",     colors:[]},
+  flicker:{n:"플리커",      d:"프레임 교번",      colors:["A","B"]},
+  motion: {n:"무빙 바",     d:"모션 블러",        colors:["A","B"]},
+};
+const COLOR_LABEL = {
+  solid:{A:"색상"}, checker:{A:"셀 색 1",B:"셀 색 2"},
+  flicker:{A:"짝수 프레임",B:"홀수 프레임"}, motion:{A:"배경",B:"바"}
+};
+
+/* ---------------- state ---------------- */
+const DEF = {
+  pattern:"checker", device:"18pro", w:1206, h:2622, fps:120, dur:30, codec:"avc", br:20,
+  colors:{solid:{A:[255,255,255]}, checker:{A:[255,255,255],B:[0,0,0]}, flicker:{A:[255,255,255],B:[0,0,0]}, motion:{A:[0,0,0],B:[255,255,255]}},
+  checker:{mode:"grid", cols:16, rows:16, px:64},
+  ramp:{steps:16, dir:"v", ch:"gray"},
+  bars:{level:100},
+  flicker:{period:1},
+  motion:{width:80, speed:16, dir:"h"},
+  ov:{marker:false, counter:false, label:false},
+};
+let S;
+try { S = Object.assign(structuredClone(DEF), JSON.parse(localStorage.getItem("pps-state")||"{}")); } catch(e){ S = structuredClone(DEF); }
+for (const k of ["colors","checker","ramp","bars","flicker","motion","ov"]) S[k] = Object.assign(structuredClone(DEF[k]), S[k]||{});
+const save = () => { try{ localStorage.setItem("pps-state", JSON.stringify(S)); }catch(e){} };
+
+/* ---------------- helpers ---------------- */
+const $ = s => document.querySelector(s);
+const el = (t,a={},...c)=>{const e=document.createElement(t);for(const k in a){if(k==="class")e.className=a[k];else if(k.startsWith("on"))e.addEventListener(k.slice(2),a[k]);else e.setAttribute(k,a[k]);}for(const x of c)e.append(x);return e;};
+const rgb = c => `rgb(${c[0]},${c[1]},${c[2]})`;
+const hex = c => "#"+c.map(v=>v.toString(16).padStart(2,"0")).join("").toUpperCase();
+const clamp=(v,a,b)=>Math.min(b,Math.max(a,v));
+const even = v => Math.max(16, Math.round(v/2)*2);
+const fmtB = b => b<1024?b+" B":b<1048576?(b/1024).toFixed(1)+" KB":(b/1048576).toFixed(2)+" MB";
+
+/* ---------------- renderer ---------------- */
+// 동적 패턴 여부 (프레임마다 화면이 바뀌는지)
+const isDynamic = st => st.pattern==="flicker"||st.pattern==="motion"||st.ov.marker||st.ov.counter;
+
+function drawBase(ctx, W, H, st, f){
+  const p = st.pattern, C = st.colors[p];
+  ctx.save();
+  if(p==="solid"){ ctx.fillStyle=rgb(C.A); ctx.fillRect(0,0,W,H); }
+  else if(p==="checker"){
+    const o=st.checker; let xs=[],ys=[];
+    if(o.mode==="grid"){ for(let i=0;i<=o.cols;i++)xs.push(Math.round(i*W/o.cols)); for(let j=0;j<=o.rows;j++)ys.push(Math.round(j*H/o.rows)); }
+    else { const s=Math.max(1,o.px); for(let x=0;x<W;x+=s)xs.push(x); xs.push(W); for(let y=0;y<H;y+=s)ys.push(y); ys.push(H); }
+    ctx.fillStyle=rgb(C.B); ctx.fillRect(0,0,W,H); ctx.fillStyle=rgb(C.A);
+    for(let j=0;j<ys.length-1;j++)for(let i=0;i<xs.length-1;i++) if((i+j)%2===0) ctx.fillRect(xs[i],ys[j],xs[i+1]-xs[i],ys[j+1]-ys[j]);
+  }
+  else if(p==="ramp"){
+    const o=st.ramp, n=Math.max(2,o.steps), L=o.dir==="h"?W:H;
+    for(let k=0;k<n;k++){
+      const v=Math.round(k*255/(n-1)), a=Math.round(k*L/n), b=Math.round((k+1)*L/n);
+      ctx.fillStyle = o.ch==="gray"?rgb([v,v,v]):o.ch==="r"?rgb([v,0,0]):o.ch==="g"?rgb([0,v,0]):rgb([0,0,v]);
+      o.dir==="h"?ctx.fillRect(a,0,b-a,H):ctx.fillRect(0,a,W,b-a);
+    }
+  }
+  else if(p==="bars"){
+    const v=Math.round(255*st.bars.level/100), seq=[[1,1,1],[1,1,0],[0,1,1],[0,1,0],[1,0,1],[1,0,0],[0,0,1],[0,0,0]];
+    seq.forEach((c,k)=>{ const a=Math.round(k*H/8), b=Math.round((k+1)*H/8); ctx.fillStyle=rgb(c.map(x=>x*v)); ctx.fillRect(0,a,W,b-a); });
+  }
+  else if(p==="flicker"){
+    const per=Math.max(1,st.flicker.period); ctx.fillStyle=rgb(Math.floor(f/per)%2===0?C.A:C.B); ctx.fillRect(0,0,W,H);
+  }
+  else if(p==="motion"){
+    const o=st.motion; ctx.fillStyle=rgb(C.A); ctx.fillRect(0,0,W,H); ctx.fillStyle=rgb(C.B);
+    const L=o.dir==="h"?W:H, span=L+o.width, pos=((f*o.speed)%span+span)%span - o.width;
+    o.dir==="h"?ctx.fillRect(Math.round(pos),0,o.width,H):ctx.fillRect(0,Math.round(pos),W,o.width);
+  }
+  ctx.restore();
+}
+function drawOverlay(ctx, W, H, st, f){
+  const u = Math.round(Math.min(W,H)/24); // 기준 단위
+  if(st.ov.marker){
+    ctx.fillStyle = f%2===0?"#fff":"#000"; ctx.fillRect(u, H-u*4, u*2, u*2);
+    ctx.strokeStyle="#808080"; ctx.lineWidth=2; ctx.strokeRect(u-1, H-u*4-1, u*2+2, u*2+2);
+  }
+  if(st.ov.counter){
+    const n=f%256, s=Math.round(u*0.9), x0=Math.round(W/2-4*s-3.5*4), y=H-u*4+Math.round((u*2-s)/2);
+    for(let b=0;b<8;b++){ ctx.fillStyle=(n>>(7-b))&1?"#fff":"#000"; ctx.fillRect(x0+b*(s+4),y,s,s); ctx.strokeStyle="#808080"; ctx.lineWidth=1; ctx.strokeRect(x0+b*(s+4)-.5,y-.5,s+1,s+1); }
+  }
+  if(st.ov.label){
+    ctx.font=`600 ${Math.round(u*0.55)}px ui-monospace,Menlo,monospace`; ctx.textAlign="center"; ctx.textBaseline="bottom";
+    const t=label(st); const tw=ctx.measureText(t).width; const pad=u*0.3;
+    ctx.fillStyle="rgba(0,0,0,.55)"; ctx.fillRect(W/2-tw/2-pad, H-u*1.25-u*0.6, tw+pad*2, u*0.85);
+    ctx.fillStyle="#9a9a9a"; ctx.fillText(t, W/2, H-u*1.15);
+  }
+}
+function render(ctx,W,H,st,f){ drawBase(ctx,W,H,st,f); drawOverlay(ctx,W,H,st,f); }
+
+function shortName(st){
+  const p=st.pattern, C=st.colors[p];
+  if(p==="solid") return `RGB${C.A.join("-")}`;
+  if(p==="checker") return st.checker.mode==="grid"?`CHK${st.checker.cols}x${st.checker.rows}`:`CHK${st.checker.px}px`;
+  if(p==="ramp") return `RAMP${st.ramp.steps}${st.ramp.ch.toUpperCase()}`;
+  if(p==="bars") return `BARS${st.bars.level}`;
+  if(p==="flicker") return `FLK${hex(C.A).slice(1)}-${hex(C.B).slice(1)}`;
+  if(p==="motion") return `MOV${st.motion.width}px${st.motion.speed}ppf`;
+}
+const label = st => `${shortName(st)} · ${st.fps}Hz · ${st.w}×${st.h}`;
+const fileBase = st => `${shortName(st)}_${st.w}x${st.h}_${st.fps}Hz_${st.dur}s`;
+
+/* ---------------- UI: tiles ---------------- */
+const tileCanv = {};
+function buildTiles(){
+  const box=$("#tiles"); box.innerHTML="";
+  for(const k in PATTERNS){
+    const c=el("canvas",{width:54,height:72}); tileCanv[k]=c;
+    box.append(el("button",{class:"tile"+(S.pattern===k?" on":""),"data-k":k,onclick:()=>{S.pattern=k;update(true);}},c,el("span",{},PATTERNS[k].n,el("small",{},PATTERNS[k].d))));
+  }
+  drawTiles();
+}
+function drawTiles(){
+  for(const k in tileCanv){
+    const st=structuredClone(S); st.pattern=k; st.ov={marker:false,counter:false,label:false};
+    if(k==="checker"){st.checker={mode:"grid",cols:4,rows:6};}
+    if(k==="motion"){st.motion={width:10,speed:0,dir:"h"};}
+    const c=tileCanv[k], x=c.getContext("2d");
+    if(k==="flicker"){ x.save(); drawBase(x,54,72,st,0); x.beginPath(); x.moveTo(54,0);x.lineTo(54,72);x.lineTo(0,72);x.closePath();x.clip(); drawBase(x,54,72,st,st.flicker.period); x.restore(); }
+    else drawBase(x,54,72,st,0);
+    if(k==="motion"){ x.fillStyle=rgb(S.colors.motion.B); x.fillRect(22,0,10,72); }
+  }
+  document.querySelectorAll(".tile").forEach(t=>t.classList.toggle("on",t.dataset.k===S.pattern));
+}
+
+/* ---------------- UI: color control ---------------- */
+function colorControl(pat, key, title){
+  const c=S.colors[pat][key];
+  const sw=el("div",{class:"sw"}), hx=el("b");
+  const sync=()=>{ sw.style.background=rgb(c); hx.textContent=`${hex(c)}  (${c.join(", ")})`; };
+  const chans=[], wrap=el("div",{class:"cc"});
+  const top=el("div",{class:"cc-top"},sw,el("div",{class:"t"},title,hx));
+  const pr=el("div",{class:"presets"});
+  PRESET_COLORS.forEach(p=>pr.append(el("button",{title:p.join(","),style:`background:${rgb(p)}`,onclick:()=>{p.forEach((v,i)=>c[i]=v);chans.forEach((f,i)=>f(c[i]));sync();update();}})));
+  wrap.append(top,pr);
+  ["R","G","B"].forEach((L,i)=>{
+    const col=["#ff5a5a","#45d483","#5b8cff"][i];
+    const r=el("input",{type:"range",min:0,max:255,step:1}), n=el("input",{type:"number",min:0,max:255,step:1});
+    const set=v=>{ r.value=v; n.value=v; const a=[0,0,0],b=[0,0,0]; b[i]=255; r.style.background=`linear-gradient(90deg,#000,${col})`; };
+    set(c[i]); chans.push(set);
+    r.addEventListener("input",()=>{c[i]=+r.value;n.value=r.value;sync();update();});
+    n.addEventListener("change",()=>{c[i]=clamp(Math.round(+n.value||0),0,255);set(c[i]);sync();update();});
+    wrap.append(el("div",{class:"ch"},el("i",{style:`color:${col}`},L),r,n));
+  });
+  sync(); return wrap;
+}
+function seg(options, val, on){
+  const s=el("div",{class:"seg"});
+  options.forEach(([v,t])=>s.append(el("button",{class:v===val?"on":"",onclick:e=>{s.querySelectorAll("button").forEach(b=>b.classList.remove("on"));e.currentTarget.classList.add("on");on(v);}},t)));
+  return s;
+}
+function num(lbl,val,unit,min,max,on){
+  const i=el("input",{type:"number",min,max,step:1}); i.value=val;
+  i.addEventListener("change",()=>{const v=clamp(Math.round(+i.value||min),min,max);i.value=v;on(v);});
+  return el("label",{class:"f"},lbl,el("div",{class:"unit"},i,el("em",{},unit)));
+}
+
+/* ---------------- UI: pattern options ---------------- */
+function buildOpts(){
+  const box=$("#opts"); box.innerHTML=""; const p=S.pattern;
+  if(p==="checker"){
+    const o=S.checker; const r=el("div",{class:"row"});
+    const fill=()=>{ r.innerHTML="";
+      if(o.mode==="grid"){ r.append(num("가로 셀 수",o.cols,"칸",1,512,v=>{o.cols=v;update();}), num("세로 셀 수",o.rows,"칸",1,512,v=>{o.rows=v;update();})); }
+      else r.append(num("셀 크기",o.px,"px",1,1024,v=>{o.px=v;update();}));
+    };
+    box.append(el("div",{},seg([["grid","N×N 격자"],["px","픽셀 크기"]],o.mode,v=>{o.mode=v;fill();update();})), r);
+    fill();
+    box.append(el("p",{class:"hint"},"격자 모드는 화면을 정확히 N×N으로 분할합니다(셀 경계는 정수 픽셀로 반올림). 픽셀 모드는 정사각 셀을 좌상단부터 채웁니다."));
+  }
+  if(p==="ramp"){
+    const o=S.ramp;
+    box.append(el("div",{class:"row"},num("계조 스텝",o.steps,"step",2,256,v=>{o.steps=v;update();})));
+    box.append(el("div",{class:"chips"},...[8,16,32,64,256].map(v=>el("button",{class:"chip"+(o.steps===v?" on":""),onclick:()=>{o.steps=v;buildOpts();update();}},String(v)))));
+    box.append(el("div",{style:"display:flex;gap:8px;flex-wrap:wrap"},seg([["gray","Gray"],["r","R"],["g","G"],["b","B"]],o.ch,v=>{o.ch=v;update();}),seg([["v","세로 방향"],["h","가로 방향"]],o.dir,v=>{o.dir=v;update();})));
+  }
+  if(p==="bars"){
+    box.append(el("div",{},seg([[100,"100%"],[75,"75%"],[50,"50%"]],S.bars.level,v=>{S.bars.level=v;update();})));
+    box.append(el("p",{class:"hint"},"White · Yellow · Cyan · Green · Magenta · Red · Blue · Black 8색 가로 띠."));
+  }
+  if(p==="flicker"){
+    box.append(el("div",{class:"row"},num("전환 주기",S.flicker.period,"frame",1,120,v=>{S.flicker.period=v;update();})));
+    box.append(el("p",{class:"hint"},"주기 1 = 매 프레임 교번 → 시각적 깜빡임 주파수는 구동 Hz의 절반입니다. 예) 120Hz · 주기 1 → 60Hz 플리커. 광과민성 발작 위험이 있으니 장시간 직시하지 마세요."));
+  }
+  if(p==="motion"){
+    const o=S.motion;
+    box.append(el("div",{class:"row"},num("바 두께",o.width,"px",1,2000,v=>{o.width=v;update();}),num("이동 속도",o.speed,"px/f",0,500,v=>{o.speed=v;update();})));
+    box.append(el("div",{},seg([["h","좌→우"],["v","위→아래"]],o.dir,v=>{o.dir=v;update();})));
+  }
+  const keys=PATTERNS[p].colors;
+  if(keys.length){ const r=el("div",{style:"display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(240px,1fr))"}); keys.forEach(k=>r.append(colorControl(p,k,COLOR_LABEL[p][k]))); box.append(r); }
+  if(p==="solid"||p==="checker") box.append(el("p",{class:"hint"},"영상(YUV 4:2:0) 인코딩 특성상 재생 시 각 채널이 ±1~2 레벨 오차가 날 수 있습니다. 정확한 코드값 검증에는 「패턴 PNG」를 함께 사용하세요."));
+}
+
+/* ---------------- UI: settings ---------------- */
+function buildSettings(){
+  const d=$("#device"); DEVICES.forEach(x=>d.append(el("option",{value:x.id},x.n+(x.w?`  —  ${x.w}×${x.h}`:""))));
+  d.value=S.device;
+  d.addEventListener("change",()=>{S.device=d.value;const x=DEVICES.find(v=>v.id===d.value);if(x.w){S.w=x.w;S.h=x.h;$("#w").value=x.w;$("#h").value=x.h;}update();});
+  const wh=(id,k)=>{const i=$(id);i.value=S[k];i.addEventListener("change",()=>{S[k]=even(clamp(+i.value||S[k],16,4096));i.value=S[k];S.device="custom";d.value="custom";update();});};
+  wh("#w","w"); wh("#h","h");
+  const f=$("#fps"); f.value=S.fps;
+  const chips=$("#fpsChips");
+  const paint=()=>chips.querySelectorAll(".chip").forEach(c=>c.classList.toggle("on",+c.dataset.v===S.fps));
+  FPS_CHIPS.forEach(v=>chips.append(el("button",{class:"chip","data-v":v,onclick:()=>{S.fps=v;f.value=v;paint();update();}},v+"Hz")));
+  f.addEventListener("change",()=>{S.fps=clamp(Math.round(+f.value||60),1,240);f.value=S.fps;paint();update();});
+  paint();
+  const du=$("#dur"); du.value=S.dur; du.addEventListener("change",()=>{S.dur=clamp(Math.round(+du.value||10),1,600);du.value=S.dur;update();});
+  const co=$("#codec"); co.value=S.codec; co.addEventListener("change",()=>{S.codec=co.value;update();});
+  const br=$("#br"); br.value=S.br; br.addEventListener("change",()=>{S.br=clamp(+br.value||20,1,200);br.value=S.br;update();});
+  [["#ovMarker","marker"],["#ovCounter","counter"],["#ovLabel","label"]].forEach(([id,k])=>{const c=$(id);c.checked=S.ov[k];c.addEventListener("change",()=>{S.ov[k]=c.checked;update();});});
+}
+
+/* ---------------- preview ---------------- */
+const pv=$("#pv"), pctx=pv.getContext("2d");
+let t0=performance.now();
+function sizePreview(){ pv.width=S.w; pv.height=S.h; }
+function drawPreview(){ const f=isDynamic(S)?Math.floor((performance.now()-t0)/1000*S.fps):0; render(pctx,S.w,S.h,S,f); }
+function loop(){ if(isDynamic(S)||fsOpen) { drawPreview(); if(fsOpen) drawFs(); } requestAnimationFrame(loop); }
+
+function update(rebuild){
+  if(rebuild){ buildOpts(); }
+  save(); sizePreview(); drawPreview(); drawTiles();
+  const frames=S.fps*S.dur;
+  $("#meta").innerHTML=`<span class="tag"><b>${S.w}×${S.h}</b></span><span class="tag"><b>${S.fps}</b> Hz</span><span class="tag"><b>${S.dur}</b> s · ${frames.toLocaleString()} f</span><span class="tag">${S.codec==="avc"?"H.264":"HEVC"} · ${S.br}Mbps</span>`;
+}
+
+/* ---------------- fullscreen ---------------- */
+const fs=$("#fs"), fsc=$("#fsc"), fctx=fsc.getContext("2d"); let fsOpen=false, fsT;
+function drawFs(){ fctx.drawImage(pv,0,0); }
+$("#bFs").onclick=()=>{
+  fsc.width=S.w; fsc.height=S.h; fsOpen=true; fs.classList.add("show"); drawPreview(); drawFs();
+  const x=$("#fsx"); x.style.opacity=1; clearTimeout(fsT); fsT=setTimeout(()=>x.style.opacity=0,1800);
+  (fs.requestFullscreen||fs.webkitRequestFullscreen||(()=>{})).call(fs);
+};
+fs.onclick=()=>{ fsOpen=false; fs.classList.remove("show"); if(document.fullscreenElement)document.exitFullscreen?.(); else if(document.webkitFullscreenElement)document.webkitExitFullscreen?.(); };
+
+/* ---------------- PNG ---------------- */
+async function shareOrDownload(blob, name, type){
+  const file=new File([blob],name,{type});
+  if(navigator.canShare && navigator.canShare({files:[file]})){
+    try{ await navigator.share({files:[file],title:name}); return; }catch(e){ if(e.name==="AbortError") return; }
+  }
+  const a=el("a",{href:URL.createObjectURL(blob),download:name}); document.body.append(a); a.click(); a.remove();
+}
+$("#bPng").onclick=()=>{
+  const c=document.createElement("canvas"); c.width=S.w; c.height=S.h;
+  const st=structuredClone(S); render(c.getContext("2d"),S.w,S.h,st,0);
+  c.toBlob(b=>shareOrDownload(b,`${fileBase(S).replace(/_\d+Hz_\d+s$/,"")}.png`,"image/png"),"image/png");
+};
+
+/* ---------------- encoder ---------------- */
+const CODECS = {
+  avc:["avc1.640034","avc1.640033","avc1.640032","avc1.4d0034","avc1.4d0033","avc1.42003e"],
+  hevc:["hvc1.1.6.L156.B0","hvc1.1.6.L153.B0","hvc1.1.6.L150.B0","hvc1.2.4.L153.B0"],
+};
+async function pickConfig(st){
+  if(!("VideoEncoder" in window)) return null;
+  for(const codec of CODECS[st.codec]){
+    const cfg={codec,width:st.w,height:st.h,bitrate:st.br*1e6,framerate:st.fps,latencyMode:"quality"};
+    if(st.codec==="avc") cfg.avc={format:"avc"}; else cfg.hevc={format:"hevc"};
+    for(const hw of ["prefer-hardware","no-preference"]){
+      try{ const r=await VideoEncoder.isConfigSupported({...cfg,hardwareAcceleration:hw}); if(r.supported) return r.config; }catch(e){}
+    }
+  }
+  return null;
+}
+async function checkSupport(){
+  const pill=$("#support"), d=pill.querySelector(".dot"), t=pill.querySelector("span:last-child");
+  if(!("VideoEncoder" in window)){ d.className="dot err"; t.textContent="WebCodecs 미지원 · 실시간 녹화 모드"; return; }
+  const cfg=await pickConfig({...S,codec:"avc"});
+  const hv=await pickConfig({...S,codec:"hevc"});
+  if(cfg){ d.className="dot ok"; t.textContent=`정밀 인코딩 가능 · H.264${hv?" / HEVC":""}`; }
+  else { d.className="dot warn"; t.textContent="이 해상도의 H.264 미지원"; }
+  if(!hv){ const o=$("#codec").querySelector('option[value=hevc]'); o.textContent+=" (미지원)"; }
+}
+
+let busy=false, lastUrl=null;
+const setProg=(r,eta)=>{ $("#pbar").style.width=(r*100).toFixed(1)+"%"; $("#ptx").textContent=(r*100).toFixed(0)+"%"; $("#peta").textContent=eta||""; };
+function warn(msg,err){ $("#warnBox").innerHTML=msg?`<div class="note${err?" err":""}">${msg}</div>`:""; }
+
+async function generate(){
+  if(busy) return; busy=true; warn("");
+  const st=structuredClone(S), btn=$("#bGen"); btn.disabled=true; btn.lastChild.textContent="생성 중…";
+  $("#prog").classList.add("show"); setProg(0,"준비 중");
+  try{
+    const cfg=await pickConfig(st);
+    let blob, mime="video/mp4", info;
+    if(cfg) { ({blob,info}=await encodeWebCodecs(st,cfg)); }
+    else    { ({blob,mime,info}=await encodeRecorder(st)); warn("이 브라우저는 WebCodecs 정밀 인코딩을 지원하지 않아 <b>실시간 녹화 방식</b>으로 생성했습니다. 프레임 타이밍이 정확하지 않을 수 있으니 iOS 16.4+ Safari 또는 최신 Chrome 사용을 권장합니다."); }
+    showResult(st,blob,mime,info);
+  }catch(e){ console.error(e); warn("생성 실패: "+(e.message||e)+"<br>해상도·비트레이트를 낮추거나 코덱을 H.264로 바꿔 다시 시도해 보세요.",true); }
+  finally{ busy=false; btn.disabled=false; btn.lastChild.textContent="동영상 생성"; setTimeout(()=>$("#prog").classList.remove("show"),600); }
+}
+
+async function encodeWebCodecs(st,cfg){
+  const total=st.fps*st.dur, dt=1e6/st.fps;
+  const muxer=new Mp4Muxer.Muxer({ target:new Mp4Muxer.ArrayBufferTarget(), video:{codec:st.codec,width:st.w,height:st.h,frameRate:st.fps}, fastStart:"in-memory", firstTimestampBehavior:"offset" });
+  let err=null;
+  const enc=new VideoEncoder({ output:(c,m)=>muxer.addVideoChunk(c,m), error:e=>err=e });
+  enc.configure(cfg);
+  const cv=document.createElement("canvas"); cv.width=st.w; cv.height=st.h;
+  const ctx=cv.getContext("2d",{alpha:false,willReadFrequently:false});
+  const dyn=isDynamic(st); let staticFrame=null;
+  const t=performance.now(); const gop=Math.max(1,Math.round(st.fps)); // 1초 키프레임
+  for(let i=0;i<total;i++){
+    if(err) throw err;
+    let frame;
+    const ts=Math.round(i*dt), du=Math.round((i+1)*dt)-ts;
+    if(dyn){ render(ctx,st.w,st.h,st,i); frame=new VideoFrame(cv,{timestamp:ts,duration:du}); }
+    else{ if(!staticFrame){ render(ctx,st.w,st.h,st,0); staticFrame=new VideoFrame(cv,{timestamp:0}); } frame=new VideoFrame(staticFrame,{timestamp:ts,duration:du}); }
+    enc.encode(frame,{keyFrame:i%gop===0}); frame.close();
+    while(enc.encodeQueueSize>8){ await new Promise(r=>setTimeout(r,1)); }
+    if(i%10===0){ const el_=(performance.now()-t)/1000, r=(i+1)/total; setProg(r*0.98, r>0.02?`남은 시간 ~${Math.ceil(el_/r-el_)}s`:""); await new Promise(r=>setTimeout(r,0)); }
+  }
+  await enc.flush(); if(err) throw err; enc.close(); staticFrame?.close();
+  muxer.finalize(); setProg(1,"완료");
+  return { blob:new Blob([muxer.target.buffer],{type:"video/mp4"}), info:{mode:"WebCodecs (정밀)",codec:cfg.codec,hw:cfg.hardwareAcceleration||"-",time:((performance.now()-t)/1000).toFixed(1)+" s"} };
+}
+
+async function encodeRecorder(st){
+  const cv=document.createElement("canvas"); cv.width=st.w; cv.height=st.h; const ctx=cv.getContext("2d");
+  render(ctx,st.w,st.h,st,0);
+  const stream=cv.captureStream(st.fps);
+  const mime=["video/mp4;codecs=avc1","video/mp4","video/webm;codecs=vp9","video/webm"].find(m=>window.MediaRecorder&&MediaRecorder.isTypeSupported(m));
+  if(!mime) throw new Error("MediaRecorder도 지원되지 않습니다.");
+  const rec=new MediaRecorder(stream,{mimeType:mime,videoBitsPerSecond:st.br*1e6}); const parts=[];
+  rec.ondataavailable=e=>e.data.size&&parts.push(e.data);
+  const done=new Promise(r=>rec.onstop=r); rec.start(500);
+  const t=performance.now(), total=st.dur*1000;
+  await new Promise(res=>{ const tick=()=>{ const e=performance.now()-t; render(ctx,st.w,st.h,st,Math.floor(e/1000*st.fps)); setProg(Math.min(1,e/total),`실시간 녹화 ${Math.ceil((total-e)/1000)}s`); if(e>=total) return res(); requestAnimationFrame(tick); }; tick(); });
+  rec.stop(); await done; stream.getTracks().forEach(x=>x.stop());
+  const base=mime.split(";")[0];
+  return { blob:new Blob(parts,{type:base}), mime:base, info:{mode:"MediaRecorder (실시간)",codec:mime,hw:"-",time:(st.dur)+" s"} };
+}
+
+function showResult(st,blob,mime,info){
+  if(lastUrl) URL.revokeObjectURL(lastUrl);
+  lastUrl=URL.createObjectURL(blob);
+  const ext=mime.includes("webm")?"webm":"mp4", name=`${fileBase(st)}.${ext}`;
+  const v=$("#vid"); v.src=lastUrl; v.play().catch(()=>{});
+  const a=$("#bDl"); a.href=lastUrl; a.download=name;
+  $("#kv").innerHTML=`<dt>파일</dt><dd>${name}</dd><dt>크기</dt><dd>${fmtB(blob.size)}</dd><dt>해상도</dt><dd>${st.w} × ${st.h}</dd><dt>프레임</dt><dd>${st.fps} Hz × ${st.dur} s = ${(st.fps*st.dur).toLocaleString()} frames</dd><dt>인코딩</dt><dd>${info.mode} · ${info.codec}</dd><dt>소요</dt><dd>${info.time}</dd>`;
+  $("#bShare").onclick=()=>shareOrDownload(blob,name,mime);
+  const r=$("#result"); r.classList.add("show"); r.scrollIntoView({behavior:"smooth",block:"nearest"});
+}
+$("#bGen").onclick=generate;
+
+/* ---------------- init ---------------- */
+buildSettings(); buildTiles(); update(true); loop(); checkSupport();
+if("serviceWorker" in navigator && location.protocol==="https:") navigator.serviceWorker.register("sw.js").catch(()=>{});
+</script>
+</body>
+</html>
