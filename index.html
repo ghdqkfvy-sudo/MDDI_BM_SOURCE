@@ -264,7 +264,7 @@ const COLOR_LABEL = {
 
 /* ---------------- state ---------------- */
 const DEF = {
-  pattern:"checker", device:"18pro", w:1206, h:2622, fps:120, dur:30, codec:"avc", br:20,
+  pattern:"checker", device:"18promax", w:1320, h:2868, fps:120, dur:30, codec:"avc", br:20,
   colors:{solid:{A:[255,255,255]}, checker:{A:[255,255,255],B:[0,0,0]}, flicker:{A:[255,255,255],B:[0,0,0]}, motion:{A:[0,0,0],B:[255,255,255]}},
   checker:{mode:"grid", cols:16, rows:16, px:64},
   ramp:{steps:16, dir:"v", ch:"gray"},
@@ -538,6 +538,7 @@ async function generate(){
   if(busy) return; busy=true; warn("");
   const st=structuredClone(S), btn=$("#bGen"); btn.disabled=true; btn.lastChild.textContent="생성 중…";
   $("#prog").classList.add("show"); setProg(0,"준비 중");
+  let lock=null; try{ lock=await navigator.wakeLock?.request("screen"); }catch(e){} // 인코딩 중 화면 잠금 → Safari 일시정지 방지
   try{
     const cfg=await pickConfig(st);
     let blob, mime="video/mp4", info;
@@ -545,7 +546,7 @@ async function generate(){
     else    { ({blob,mime,info}=await encodeRecorder(st)); warn("이 브라우저는 WebCodecs 정밀 인코딩을 지원하지 않아 <b>실시간 녹화 방식</b>으로 생성했습니다. 프레임 타이밍이 정확하지 않을 수 있으니 iOS 16.4+ Safari 또는 최신 Chrome 사용을 권장합니다."); }
     showResult(st,blob,mime,info);
   }catch(e){ console.error(e); warn("생성 실패: "+(e.message||e)+"<br>해상도·비트레이트를 낮추거나 코덱을 H.264로 바꿔 다시 시도해 보세요.",true); }
-  finally{ busy=false; btn.disabled=false; btn.lastChild.textContent="동영상 생성"; setTimeout(()=>$("#prog").classList.remove("show"),600); }
+  finally{ lock?.release().catch(()=>{}); busy=false; btn.disabled=false; btn.lastChild.textContent="동영상 생성"; setTimeout(()=>$("#prog").classList.remove("show"),600); }
 }
 
 async function encodeWebCodecs(st,cfg){
