@@ -239,8 +239,8 @@ footer{text-align:center;color:var(--tx3);font-size:11.5px;margin-top:10px}
 "use strict";
 /* ---------------- data ---------------- */
 const DEVICES = [
-  {id:"18pro",   n:"iPhone 18 Pro · 6.3″",     w:1206, h:2622},
   {id:"18promax",n:"iPhone 18 Pro Max · 6.9″", w:1320, h:2868},
+  {id:"18pro",   n:"iPhone 18 Pro · 6.3″",     w:1206, h:2622},
   {id:"17",      n:"iPhone 17 · 6.3″",         w:1206, h:2622},
   {id:"air",     n:"iPhone Air · 6.5″",        w:1260, h:2736},
   {id:"fhd",     n:"FHD 세로 1080×1920",        w:1080, h:1920},
@@ -273,8 +273,14 @@ const DEF = {
   motion:{width:80, speed:16, dir:"h"},
   ov:{marker:false, counter:false, label:false},
 };
+const STATE_VER = 2; // 올리면 저장된 기기/해상도를 기본값(Pro Max)으로 한 번 초기화
 let S;
-try { S = Object.assign(structuredClone(DEF), JSON.parse(localStorage.getItem("pps-state")||"{}")); } catch(e){ S = structuredClone(DEF); }
+try {
+  const saved = JSON.parse(localStorage.getItem("pps-state")||"{}");
+  if (saved.ver !== STATE_VER) { delete saved.device; delete saved.w; delete saved.h; }
+  S = Object.assign(structuredClone(DEF), saved);
+} catch(e){ S = structuredClone(DEF); }
+S.ver = STATE_VER;
 for (const k of ["colors","checker","ramp","bars","flicker","motion","ov"]) S[k] = Object.assign(structuredClone(DEF[k]), S[k]||{});
 const save = () => { try{ localStorage.setItem("pps-state", JSON.stringify(S)); }catch(e){} };
 
