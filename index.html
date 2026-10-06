@@ -266,7 +266,7 @@ const COLOR_LABEL = {
 const DEF = {
   pattern:"checker", device:"18promax", w:1320, h:2868, fps:120, dur:30, codec:"avc", br:20,
   colors:{solid:{A:[255,255,255]}, checker:{A:[255,255,255],B:[0,0,0]}, flicker:{A:[255,255,255],B:[0,0,0]}, motion:{A:[0,0,0],B:[255,255,255]}},
-  checker:{mode:"grid", cols:16, rows:16, px:64},
+  checker:{mode:"px", pw:16, ph:16, cols:16, rows:16},
   ramp:{steps:16, dir:"v", ch:"gray"},
   bars:{level:100},
   flicker:{period:1},
@@ -282,6 +282,9 @@ try {
 } catch(e){ S = structuredClone(DEF); }
 S.ver = STATE_VER;
 for (const k of ["colors","checker","ramp","bars","flicker","motion","ov"]) S[k] = Object.assign(structuredClone(DEF[k]), S[k]||{});
+// 구버전 체커 설정 이전: "grid"(화면 N등분) → "div", 정사각 px → 가로/세로 px
+if (S.checker.mode==="grid") S.checker.mode="div";
+if (S.checker.px!==undefined){ S.checker.pw=S.checker.ph=S.checker.px; delete S.checker.px; }
 const save = () => { try{ localStorage.setItem("pps-state", JSON.stringify(S)); }catch(e){} };
 
 /* ---------------- helpers ---------------- */
@@ -303,8 +306,8 @@ function drawBase(ctx, W, H, st, f){
   if(p==="solid"){ ctx.fillStyle=rgb(C.A); ctx.fillRect(0,0,W,H); }
   else if(p==="checker"){
     const o=st.checker; let xs=[],ys=[];
-    if(o.mode==="grid"){ for(let i=0;i<=o.cols;i++)xs.push(Math.round(i*W/o.cols)); for(let j=0;j<=o.rows;j++)ys.push(Math.round(j*H/o.rows)); }
-    else { const s=Math.max(1,o.px); for(let x=0;x<W;x+=s)xs.push(x); xs.push(W); for(let y=0;y<H;y+=s)ys.push(y); ys.push(H); }
+    if(o.mode==="div"){ for(let i=0;i<=o.cols;i++)xs.push(Math.round(i*W/o.cols)); for(let j=0;j<=o.rows;j++)ys.push(Math.round(j*H/o.rows)); }
+    else { const sw=Math.max(1,o.pw), sh=Math.max(1,o.ph); for(let x=0;x<W;x+=sw)xs.push(x); xs.push(W); for(let y=0;y<H;y+=sh)ys.push(y); ys.push(H); }
     ctx.fillStyle=rgb(C.B); ctx.fillRect(0,0,W,H); ctx.fillStyle=rgb(C.A);
     for(let j=0;j<ys.length-1;j++)for(let i=0;i<xs.length-1;i++) if((i+j)%2===0) ctx.fillRect(xs[i],ys[j],xs[i+1]-xs[i],ys[j+1]-ys[j]);
   }
@@ -352,7 +355,7 @@ function render(ctx,W,H,st,f){ drawBase(ctx,W,H,st,f); drawOverlay(ctx,W,H,st,f)
 function shortName(st){
   const p=st.pattern, C=st.colors[p];
   if(p==="solid") return `RGB${C.A.join("-")}`;
-  if(p==="checker") return st.checker.mode==="grid"?`CHK${st.checker.cols}x${st.checker.rows}`:`CHK${st.checker.px}px`;
+  if(p==="checker") return st.checker.mode==="div"?`CHKDIV${st.checker.cols}x${st.checker.rows}`:`CHK${st.checker.pw}x${st.checker.ph}px`;
   if(p==="ramp") return `RAMP${st.ramp.steps}${st.ramp.ch.toUpperCase()}`;
   if(p==="bars") return `BARS${st.bars.level}`;
   if(p==="flicker") return `FLK${hex(C.A).slice(1)}-${hex(C.B).slice(1)}`;
@@ -374,7 +377,7 @@ function buildTiles(){
 function drawTiles(){
   for(const k in tileCanv){
     const st=structuredClone(S); st.pattern=k; st.ov={marker:false,counter:false,label:false};
-    if(k==="checker"){st.checker={mode:"grid",cols:4,rows:6};}
+    if(k==="checker"){st.checker={mode:"div",cols:4,rows:6};}
     if(k==="motion"){st.motion={width:10,speed:0,dir:"h"};}
     const c=tileCanv[k], x=c.getContext("2d");
     if(k==="flicker"){ x.save(); drawBase(x,54,72,st,0); x.beginPath(); x.moveTo(54,0);x.lineTo(54,72);x.lineTo(0,72);x.closePath();x.clip(); drawBase(x,54,72,st,st.flicker.period); x.restore(); }
@@ -422,12 +425,15 @@ function buildOpts(){
   if(p==="checker"){
     const o=S.checker; const r=el("div",{class:"row"});
     const fill=()=>{ r.innerHTML="";
-      if(o.mode==="grid"){ r.append(num("가로 셀 수",o.cols,"칸",1,512,v=>{o.cols=v;update();}), num("세로 셀 수",o.rows,"칸",1,512,v=>{o.rows=v;update();})); }
-      else r.append(num("셀 크기",o.px,"px",1,1024,v=>{o.px=v;update();}));
+      if(o.mode==="div"){ r.append(num("가로 분할",o.cols,"칸",1,512,v=>{o.cols=v;update();}), num("세로 분할",o.rows,"칸",1,512,v=>{o.rows=v;update();})); }
+      else {
+        r.append(num("셀 가로",o.pw,"px",1,1024,v=>{o.pw=v;update();}), num("셀 세로",o.ph,"px",1,1024,v=>{o.ph=v;update();}));
+        r.append(el("div",{class:"chips",style:"grid-column:1/-1"},...[1,2,4,8,16,32,64].map(v=>el("button",{class:"chip"+(o.pw===v&&o.ph===v?" on":""),onclick:()=>{o.pw=o.ph=v;fill();update();}},`${v}×${v}`))));
+      }
     };
-    box.append(el("div",{},seg([["grid","N×N 격자"],["px","픽셀 크기"]],o.mode,v=>{o.mode=v;fill();update();})), r);
+    box.append(el("div",{},seg([["px","N×N 픽셀"],["div","화면 분할"]],o.mode,v=>{o.mode=v;fill();update();})), r);
     fill();
-    box.append(el("p",{class:"hint"},"격자 모드는 화면을 정확히 N×N으로 분할합니다(셀 경계는 정수 픽셀로 반올림). 픽셀 모드는 정사각 셀을 좌상단부터 채웁니다."));
+    box.append(el("p",{class:"hint"},"N×N 픽셀: 셀 하나가 정확히 N×N px이며 좌상단부터 채웁니다(해상도가 N의 배수가 아니면 우측·하단 끝 셀이 잘립니다). 화면 분할: 화면을 가로×세로 칸으로 나눕니다(셀 경계는 정수 픽셀로 반올림). ※ 미리보기는 축소 표시라 작은 셀은 회색 무늬(모아레)로 보입니다. 실제 픽셀은 「패턴 PNG」로 확인하세요."));
   }
   if(p==="ramp"){
     const o=S.ramp;
@@ -497,12 +503,18 @@ $("#bFs").onclick=()=>{
 fs.onclick=()=>{ fsOpen=false; fs.classList.remove("show"); if(document.fullscreenElement)document.exitFullscreen?.(); else if(document.webkitFullscreenElement)document.webkitExitFullscreen?.(); };
 
 /* ---------------- PNG ---------------- */
+// PC(Windows/macOS 데스크톱)는 공유 시트 대신 바로 파일 저장
+const IS_MOBILE = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || (navigator.platform==="MacIntel" && navigator.maxTouchPoints>1);
+function download(blob, name){
+  const url=URL.createObjectURL(blob), a=el("a",{href:url,download:name}); document.body.append(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),60000);
+}
 async function shareOrDownload(blob, name, type){
   const file=new File([blob],name,{type});
-  if(navigator.canShare && navigator.canShare({files:[file]})){
+  if(IS_MOBILE && navigator.canShare && navigator.canShare({files:[file]})){
     try{ await navigator.share({files:[file],title:name}); return; }catch(e){ if(e.name==="AbortError") return; }
   }
-  const a=el("a",{href:URL.createObjectURL(blob),download:name}); document.body.append(a); a.click(); a.remove();
+  download(blob, name);
 }
 $("#bPng").onclick=()=>{
   const c=document.createElement("canvas"); c.width=S.w; c.height=S.h;
@@ -630,11 +642,16 @@ function showResult(st,blob,mime,info){
   const a=$("#bDl"); a.href=lastUrl; a.download=name;
   $("#kv").innerHTML=`<dt>파일</dt><dd>${name}</dd><dt>크기</dt><dd>${fmtB(blob.size)}</dd><dt>해상도</dt><dd>${st.w} × ${st.h}</dd><dt>프레임</dt><dd>${st.fps} Hz × ${st.dur} s = ${(st.fps*st.dur).toLocaleString()} frames</dd><dt>인코딩</dt><dd>${info.mode} · ${info.codec}</dd><dt>소요</dt><dd>${info.time}</dd>`;
   $("#bShare").onclick=()=>shareOrDownload(blob,name,mime);
+  $("#bDl").onclick=e=>{ e.preventDefault(); download(blob,name); };
   const r=$("#result"); r.classList.add("show"); r.scrollIntoView({behavior:"smooth",block:"nearest"});
 }
 $("#bGen").onclick=generate;
 
 /* ---------------- init ---------------- */
+if(!IS_MOBILE){ // PC: 공유 버튼 숨기고 다운로드를 주 버튼으로
+  $("#bShare").classList.add("hide"); $("#bDl").classList.add("pri");
+  $("#bPng").lastChild.textContent="PNG 다운로드";
+}
 buildSettings(); buildTiles(); update(true); loop(); checkSupport();
 if("serviceWorker" in navigator && location.protocol==="https:") navigator.serviceWorker.register("sw.js").catch(()=>{});
 </script>
